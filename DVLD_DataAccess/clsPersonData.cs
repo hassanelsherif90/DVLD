@@ -203,11 +203,27 @@ namespace DVLD_DataAccess
 
                 using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
                 {
-                    string query = @"INSERT INTO People (FirstName, SecondName, ThirdName,LastName,NationalNo,
+                    /*string query = @"INSERT INTO People (FirstName, SecondName, ThirdName,LastName,NationalNo,
                                                    DateOfBirth,Gendor,Address,Phone, Email, NationalityCountryID,ImagePath)
                              VALUES (@FirstName, @SecondName,@ThirdName, @LastName, @NationalNo,
                                      @DateOfBirth,@Gendor,@Address,@Phone, @Email,@NationalityCountryID,@ImagePath);
-                             SELECT SCOPE_IDENTITY();";
+                             SELECT SCOPE_IDENTITY();";*/
+                    string query = @"DECLARE @PersonID INT
+                                        EXEC SP_AddNewPerson
+                                        @FirstName = @FirstName,
+                                        @SecondName = @SecondName,
+                                        @ThirdName = @ThirdName,
+                                        @LastName = @LastName,
+                                        @NationalNo = @NationalNo,
+                                        @DateOfBirth = @DateOfBirth,
+                                        @Gendor = @Gendor,
+                                        @Address = @Address,
+                                        @Phone = @Phone, 
+                                        @Email = @Email,
+                                        @NationalityCountryID = @NationalityCountryID,
+                                        @ImagePath = @ImagePath,
+                                        @NewPersonID = @PersonID OUTPUT;
+                                        SELECT @PersonID AS NewPersonID;";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {

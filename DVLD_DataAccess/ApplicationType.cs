@@ -14,12 +14,12 @@ namespace DVLD_DataAccess
     public class clsApplicationTypeData
     {
 
-        public static bool GetApplicationTypeInfoByID(int ApplicationTypeID, 
+        public static bool GetApplicationTypeInfoByID(int ApplicationTypeID,
             ref string ApplicationTypeTitle, ref float ApplicationFees)
+        {
+            bool isFound = false;
+            try
             {
-                bool isFound = false;
-                try
-                {
                 using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
                 {
                     string query = "SELECT * FROM ApplicationTypes WHERE ApplicationTypeID = @ApplicationTypeID";
@@ -37,13 +37,8 @@ namespace DVLD_DataAccess
                         isFound = true;
 
                         ApplicationTypeTitle = (string)reader["ApplicationTypeTitle"];
-                        ApplicationFees = Convert.ToSingle( reader["ApplicationFees"]);
-
-                  
-
-
-
-                }
+                        ApplicationFees = Convert.ToSingle(reader["ApplicationFees"]);
+                    }
                     else
                     {
                         // The record was not found
@@ -51,88 +46,82 @@ namespace DVLD_DataAccess
                     }
 
                     reader.Close();
-
-
                 }
             }
             catch (Exception ex)
-                {
-                    //Console.WriteLine("Error: " + ex.Message);
-                    isFound = false;
-                }
-                finally
-                {
-                    connection.Close();
-                }
-
-                return isFound;
+            {
+                //Console.WriteLine("Error: " + ex.Message);
+                isFound = false;
             }
+            return isFound;
+        }
 
         public static DataTable GetAllApplicationTypes()
+        {
+            DataTable dt = new DataTable();
+            try
             {
-
-                DataTable dt = new DataTable();
-                SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
-
-                string query = "SELECT * FROM ApplicationTypes order by ApplicationTypeTitle";
-
-                SqlCommand command = new SqlCommand(query, connection);
-
-                try
+                using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
                 {
-                    connection.Open();
+                    string query = "SELECT * FROM ApplicationTypes order by ApplicationTypeTitle";
 
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    if (reader.HasRows)
-
+                    using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        dt.Load(reader);
+                        connection.Open();
+
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                dt.Load(reader);
+                            }
+                        }
                     }
-
-                    reader.Close();
-
-
                 }
-
-                catch (Exception ex)
-                {
-                    // Console.WriteLine("Error: " + ex.Message);
-                }
-                finally
-                {
-                    connection.Close();
-                }
-
-                return dt;
-
             }
+
+            catch (Exception ex)
+            {
+                // Console.WriteLine("Error: " + ex.Message);
+            }
+            return dt;
+
+        } 
 
         public static int AddNewApplicationType( string Title, float Fees)
         {
             int ApplicationTypeID = -1;
-
-            SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
-
-            string query = @"Insert Into ApplicationTypes (ApplicationTypeTitle,ApplicationFees)
-                            Values (@Title,@Fees)
-                            
-                            SELECT SCOPE_IDENTITY();";
-
-            SqlCommand command = new SqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@ApplicationTypeTitle", Title);
-            command.Parameters.AddWithValue("@ApplicationFees", Fees);
-
             try
             {
-                connection.Open();
-
-                object result = command.ExecuteScalar();
-
-                if (result != null && int.TryParse(result.ToString(), out int insertedID))
+                using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
                 {
-                    ApplicationTypeID = insertedID;
+
+                    /*string query = @"Insert Into ApplicationTypes (ApplicationTypeTitle,ApplicationFees)
+                            Values (@Title,@Fees)
+                            
+                            SELECT SCOPE_IDENTITY();";*/
+                    string query = @"DECLARE ApplicationTypeID INT
+                                    SP_AddNewApplicationType
+	                                @ApplicationTypeTitle = @ApplicationTypeTitle,
+	                                @ApplicationFees = @ApplicationFees,
+	                                @ApplicationTypeID =  @ApplicationTypeID OUTPUT;
+                                    SELECT @ApplicationTypeID AS ApplicationTypeID;
+                                       ";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+
+                        command.Parameters.AddWithValue("@ApplicationTypeTitle", Title);
+                        command.Parameters.AddWithValue("@ApplicationFees", Fees);
+                        connection.Open();
+
+                        object result = command.ExecuteScalar();
+
+                        if (result != null && int.TryParse(result.ToString(), out int insertedID))
+                        {
+                            ApplicationTypeID = insertedID;
+                        }
+                    }
                 }
             }
 
@@ -141,13 +130,6 @@ namespace DVLD_DataAccess
                 //Console.WriteLine("Error: " + ex.Message);
 
             }
-
-            finally
-            {
-                connection.Close();
-            }
-
-
             return ApplicationTypeID;
 
         }
