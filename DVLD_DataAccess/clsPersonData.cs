@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web;
 
 namespace DVLD_DataAccess
 {
@@ -18,7 +19,9 @@ namespace DVLD_DataAccess
             {
                 using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
                 {
-                    string query = "SELECT * FROM People WHERE PersonID = @PersonID";
+                    //string query = "SELECT * FROM People WHERE PersonID = @PersonID";
+                    string query = @"EXEC SP_GetPersonInfoByID 
+                                    @PersonID = @PersonID";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -108,7 +111,8 @@ namespace DVLD_DataAccess
             {
                 using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
                 {
-                    string query = "SELECT * FROM People WHERE NationalNo = @NationalNo";
+                    //string query = "SELECT * FROM People WHERE NationalNo = @NationalNo";
+                    string query = "EXEC SP_GetPersonInfoByNationalNo @NationalNo = @NationalNo";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -403,34 +407,31 @@ namespace DVLD_DataAccess
         {
 
             int rowsAffected = 0;
-
-            SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
-
-            string query = @"Delete People 
-                                where PersonID = @PersonID";
-
-            SqlCommand command = new SqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@PersonID", PersonID);
-
             try
             {
-                connection.Open();
+                using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
+                {
+                    string query = @"EXEC SP_DeletePerson
+                             PersonID = @PersonID";
+                    //string query = @"Delete People  WHERE PersonID = @PersonID;";
 
-                rowsAffected = command.ExecuteNonQuery();
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
 
+                        command.Parameters.AddWithValue("@PersonID", PersonID);
+
+
+                        connection.Open();
+
+                        rowsAffected = command.ExecuteNonQuery();
+                    }
+                }
+            
             }
             catch (Exception ex)
             {
                 // Console.WriteLine("Error: " + ex.Message);
             }
-            finally
-            {
-
-                connection.Close();
-
-            }
-
             return (rowsAffected > 0);
 
         }
@@ -439,33 +440,31 @@ namespace DVLD_DataAccess
         {
             bool isFound = false;
 
-            SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
-
-            string query = "SELECT Found=1 FROM People WHERE PersonID = @PersonID";
-
-            SqlCommand command = new SqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@PersonID", PersonID);
 
             try
             {
-                connection.Open();
-                SqlDataReader reader = command.ExecuteReader();
+                using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
+                {
+                    //string query = "SELECT Found = 1 FROM People WHERE PersonID = @PersonID";
+                    string query = "exec SP_IsPersonExist @PersonID = @PersonID";
 
-                isFound = reader.HasRows;
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
 
-                reader.Close();
+                        command.Parameters.AddWithValue("@PersonID", PersonID);
+                        connection.Open();
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            isFound = reader.HasRows;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 //Console.WriteLine("Error: " + ex.Message);
                 isFound = false;
             }
-            finally
-            {
-                connection.Close();
-            }
-
             return isFound;
         }
 
@@ -475,7 +474,8 @@ namespace DVLD_DataAccess
 
             SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
 
-            string query = "SELECT Found=1 FROM People WHERE NationalNo = @NationalNo";
+            //string query = "SELECT Found=1 FROM People WHERE NationalNo = @NationalNo";
+            string query = "exec SP_IsPersonExistByNationalNo @NationalNo = @NationalNo";
 
             SqlCommand command = new SqlCommand(query, connection);
 
