@@ -7,22 +7,25 @@ namespace DVLD_DataAccess
 {
     public class clsUserData
     {
-       
+
         public static bool GetUserInfoByUserID(int UserID, ref int PersonID, ref string UserName,
             ref string Password, ref bool IsActive)
         {
             bool isFound = false;
 
-            SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
-
-            string query = "SELECT * FROM Users WHERE UserID = @UserID";
-
-            SqlCommand command = new SqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@UserID", UserID);
 
             try
             {
+                using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
+                {
+
+                
+
+                string query = "SELECT * FROM Users WHERE UserID = @UserID";
+
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@UserID", UserID);
                 connection.Open();
                 SqlDataReader reader = command.ExecuteReader();
 
@@ -35,7 +38,7 @@ namespace DVLD_DataAccess
                     UserName = (string)reader["UserName"];
                     Password = (string)reader["Password"];
                     IsActive = (bool)reader["IsActive"];
-                    
+
 
                 }
                 else
@@ -45,26 +48,22 @@ namespace DVLD_DataAccess
                 }
 
                 reader.Close();
-
+                }
 
             }
             catch (Exception ex)
             {
                 //Console.WriteLine("Error: " + ex.Message);
-                
+
                 isFound = false;
             }
-            finally
-            {
-                connection.Close();
-            }
-
+           
             return isFound;
         }
 
 
         public static bool GetUserInfoByPersonID(int PersonID, ref int UserID, ref string UserName,
-          ref string Password,ref bool IsActive)
+          ref string Password, ref bool IsActive)
         {
             bool isFound = false;
 
@@ -116,7 +115,7 @@ namespace DVLD_DataAccess
             return isFound;
         }
 
-        public static bool GetUserInfoByUsernameAndPassword(string UserName,  string Password, 
+        public static bool GetUserInfoByUsernameAndPassword(string UserName, string Password,
             ref int UserID, ref int PersonID, ref bool IsActive)
         {
             bool isFound = false;
@@ -140,7 +139,7 @@ namespace DVLD_DataAccess
                 {
                     // The record was found
                     isFound = true;
-                    UserID= (int)reader["UserID"];
+                    UserID = (int)reader["UserID"];
                     PersonID = (int)reader["PersonID"];
                     UserName = (string)reader["UserName"];
                     Password = (string)reader["Password"];
@@ -172,8 +171,8 @@ namespace DVLD_DataAccess
             return isFound;
         }
 
-        public static int AddNewUser(int PersonID,  string UserName,
-             string Password,  bool IsActive)
+        public static int AddNewUser(int PersonID, string UserName,
+             string Password, bool IsActive)
         {
             //this function will return the new person id if succeeded and -1 if not.
             int UserID = -1;
