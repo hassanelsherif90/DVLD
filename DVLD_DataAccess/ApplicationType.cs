@@ -18,17 +18,15 @@ namespace DVLD_DataAccess
             ref string ApplicationTypeTitle, ref float ApplicationFees)
             {
                 bool isFound = false;
-
-                SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString);
-
-                string query = "SELECT * FROM ApplicationTypes WHERE ApplicationTypeID = @ApplicationTypeID";
-
-                SqlCommand command = new SqlCommand(query, connection);
-
-                command.Parameters.AddWithValue("@ApplicationTypeID", ApplicationTypeID);
-
                 try
                 {
+                using (SqlConnection connection = new SqlConnection(clsDataAccessSettings.ConnectionString))
+                {
+                    string query = "SELECT * FROM ApplicationTypes WHERE ApplicationTypeID = @ApplicationTypeID";
+
+                    SqlCommand command = new SqlCommand(query, connection);
+
+                    command.Parameters.AddWithValue("@ApplicationTypeID", ApplicationTypeID);
                     connection.Open();
                     SqlDataReader reader = command.ExecuteReader();
 
@@ -56,7 +54,8 @@ namespace DVLD_DataAccess
 
 
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
                 {
                     //Console.WriteLine("Error: " + ex.Message);
                     isFound = false;
